@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+.idea/
+/models/
+/word_grids/
+/jsons/
+/model_output/
+/pdf_outputs/
+/detectron2/
+/ollama/
+/data/
+/data/
