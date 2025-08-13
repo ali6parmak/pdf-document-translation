@@ -209,6 +209,7 @@ __marimo__/
 
 .idea/
 /models/
+*_models/
 /word_grids/
 /jsons/
 /model_output/

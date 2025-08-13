@@ -133,4 +133,6 @@ if __name__ == "__main__":
     # print("start")
     # benchmark("llama3.1:70b", "en-fr", 100)
     # print("time", round(time() - start, 2), "s")
-    print(read_samples("en-ru", 10))
+    print(read_samples("en-es", 10))
+
+    # print(get_bleu_score("Can it be delivered between 10 to 15 minutes?", "Can I receive my food in 10 to 15 minutes?"))
