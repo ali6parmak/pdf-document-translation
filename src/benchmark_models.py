@@ -1,5 +1,9 @@
 import json
 import os
+import subprocess
+import torch
+from configuration import PROMPTS
+
 from pathlib import Path
 from time import time
 
@@ -13,7 +17,17 @@ from huggingface_hub import hf_hub_download
 from configuration import ROOT_PATH, LANGUAGES_SHORT, LANGUAGES
 from domain.TranslationTask import TranslationTask
 from fast_bleu import BLEU
+
+from bleurt_pytorch import BleurtForSequenceClassification, BleurtTokenizer
+from bert_score import score
+
+from comet import download_model, load_from_checkpoint
+from huggingface_hub import login
+from dotenv import load_dotenv
 from ollama import Client
+
+load_dotenv()
+login(token=os.getenv("HUGGINGFACE_TOKEN"))
 
 # MODELS = ["llama3", "tinyllama", "GLM-4"]
 LANGUAGES_PAIRS = ["en-ru"]
@@ -22,22 +36,14 @@ LANGUAGES_PAIRS = ["en-ru"]
 MODELS = ["aya:35b"]
 
 
-def get_content(translation_task: TranslationTask):
+def get_content(translation_task: TranslationTask, prompt_name: str = "Prompt 3"):
     language_to_name = "English"
     languages_to = [x for x in LANGUAGES_SHORT if translation_task.language_to.lower()[:2] == x]
 
     if languages_to:
         language_to_name = LANGUAGES[LANGUAGES_SHORT.index(languages_to[0])]
 
-    content = f"""Please translate the following text into {language_to_name}. Follow these guidelines:
-1. Maintain the original layout and formatting.
-2. Translate all text accurately without omitting any part of the content.
-3. Preserve the tone and style of the original text.
-4. Do not include any additional comments, notes, or explanations in the output; provide only the translated text.
-5. Only translate the text between ``` and ```. Do not output any other text or character.
-
-Here is the text to be translated:
-"""
+    content = PROMPTS[prompt_name].format(language_to_name=language_to_name)
     content += "\n\n" + "```" + translation_task.text + "```"
     return content
 
@@ -63,76 +69,161 @@ def read_samples(language_pair: str, limit: int = 0) -> list[tuple[str, str]]:
     return texts_translations
 
 
-def get_bleu_score(correct_text: str, prediction: str):
-    list_of_references = [correct_text.split()]
-    hypotheses = [prediction.split()]
-    weights = {"bigram": (1 / 2.0, 1 / 2.0), "trigram": (1 / 3.0, 1 / 3.0, 1 / 3.0)}
-    bleu = BLEU(list_of_references, weights)
-    average = (bleu.get_score(hypotheses)["bigram"][0] + bleu.get_score(hypotheses)["trigram"][0]) / 2.0
-    return average
+def get_bleu_score(samples: list[tuple[str, str]], predictions: list[str]):
+
+    total_score = 0
+    for i, (source_text, reference_text) in tqdm(enumerate(samples)):
+        prediction = predictions[i].replace("```", "")
+        list_of_references = [reference_text.split()]
+        hypotheses = [prediction.split()]
+        weights = {"bigram": (1 / 2.0, 1 / 2.0), "trigram": (1 / 3.0, 1 / 3.0, 1 / 3.0)}
+        bleu = BLEU(list_of_references, weights)
+        total_score += (bleu.get_score(hypotheses)["bigram"][0] + bleu.get_score(hypotheses)["trigram"][0]) / 2.0
+    return round(total_score * 100 / len(samples), 2)
 
 
-def get_prediction(model: str, text: str, language_from: str, language_to: str):
+def get_xcomet_xl_score(samples: list[tuple[str, str]], predictions: list[str]):
+    model_path = download_model("Unbabel/XCOMET-XL")
+    model = load_from_checkpoint(model_path)
+    data = []
+
+    for i, (source_text, reference_text) in tqdm(enumerate(samples)):
+        data.append(
+            {
+                "src": source_text,
+                "mt": predictions[i].replace("```", ""),
+                "ref": reference_text,
+            }
+        )
+    model_output = model.predict(data, batch_size=8, gpus=1)
+    return round(model_output.system_score * 100, 2)
+
+
+def get_wmt23_cometkiwi_da_xl_score(samples: list[tuple[str, str]], predictions: list[str]):
+    model_path = download_model("Unbabel/wmt23-cometkiwi-da-xl")
+    model = load_from_checkpoint(model_path)
+    data = []
+
+    for i, (source_text, reference_text) in tqdm(enumerate(samples)):
+        data.append(
+            {
+                "src": source_text,
+                "mt": predictions[i].replace("```", ""),
+            }
+        )
+    model_output = model.predict(data, batch_size=8, gpus=1)
+    return round(model_output.system_score * 100, 2)
+
+
+def get_bleurt_score(samples: list[tuple[str, str]], predictions: list[str]):
+    model = BleurtForSequenceClassification.from_pretrained("lucadiliello/BLEURT-20")
+    tokenizer = BleurtTokenizer.from_pretrained("lucadiliello/BLEURT-20")
+
+    references = [x[1] for x in samples]
+
+    model.eval()
+    with torch.no_grad():
+        inputs = tokenizer(references, predictions, padding="longest", return_tensors="pt")
+        res = model(**inputs).logits.flatten().tolist()
+    return round(sum(res) * 100 / len(res), 2)
+
+
+def get_bert_score(samples: list[tuple[str, str]], predictions: list[str]):
+    references = [x[1] for x in samples]
+    precision, recall, f1 = score(predictions, references, model_type="bert-base-multilingual-cased", verbose=True)
+    return round(f1.mean().item() * 100, 2)
+
+
+def get_prediction(model: str, text: str, language_from: str, language_to: str, prompt_name: str = "Prompt 3"):
     translation_task = TranslationTask(text=text, language_from=language_from, language_to=language_to)
-    content = get_content(translation_task)
+    content = get_content(translation_task, prompt_name)
     response = Client().chat(model=model, messages=[{"role": "user", "content": content}])
     return response["message"]["content"]
 
 
-def benchmark(model: str, language_pair: str, limit: int = 0):
-    root_path = Path(join(ROOT_PATH, "data", "predictions", model, language_pair))
+def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: str = "Prompt 3"):
+    predictions_path = Path(join(ROOT_PATH, "data", "predictions", model, f"samples_{limit}", language_pair))
 
-    if not root_path.exists():
-        os.makedirs(root_path)
+    if not predictions_path.exists():
+        os.makedirs(predictions_path)
 
     print(f"Model: {model}, Pair: {language_pair}")
     samples = read_samples(language_pair)
     if limit:
         samples = samples[:limit]
     translations = list()
-    total_time = 0
     print(f"Number of samples: {len(samples)}")
     print("Starting benchmark...")
+    start_time = time()
     for i, (from_text, human_translation) in tqdm(enumerate(samples)):
         batch = i // 50
-        path = Path(join(root_path, str(batch) + ".json"))
+        path = Path(join(predictions_path, str(batch) + ".json"))
         if path.exists():
             print("skipping batch", batch, "...")
             continue
 
         language_from = language_pair.split("-")[0]
         language_to = language_pair.split("-")[1]
-        start_time = time()
-        prediction = get_prediction(model, from_text, language_from, language_to)
-        total_time += time() - start_time
+        prediction = get_prediction(model, from_text, language_from, language_to, prompt_name)
         translations.append(prediction)
 
         if (i + 1) % 50 == 0:
             path.write_text(json.dumps(translations, indent=4))
             translations = list()
+    total_time = time() - start_time
 
     print(f"Total time: {round(total_time, 2)} seconds")
 
-    get_performance(samples, root_path)
+    get_performance(samples, predictions_path, prompt_name, round(total_time, 2))
 
 
-def get_performance(samples: list[tuple[str, str]], path: Path):
+def get_performance(
+    samples: list[tuple[str, str]], predictions_path: Path, prompt_name: str = "Prompt 3", total_time: float = 0.0
+):
+    results_path = Path(join(ROOT_PATH, "results.txt"))
+    if not results_path.exists():
+        results_path.write_text(
+            "model,language_pair,sample_count,prompt_name,bleu,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time\n"
+        )
+    model = predictions_path.parent.parent.name
+    sample_count = predictions_path.parent.name.split("_")[1]
+    language_pair = predictions_path.name
+
+    subprocess.run(["ollama", "stop", model])
+
     predictions = list()
-    for file in sorted(os.listdir(path), key=lambda x: int(x.split(".")[0])):
-        predictions += json.loads(Path(join(path, file)).read_text())
-    average_bleu_performance = 0
-    for i, (text_from, text_to) in tqdm(enumerate(samples)):
-        prediction = predictions[i].replace("```", "")
-        average_bleu_performance += get_bleu_score(text_to, prediction)
+    for file in sorted(os.listdir(predictions_path), key=lambda x: int(x.split(".")[0])):
+        predictions += json.loads(Path(join(predictions_path, file)).read_text())
 
-    print(f"Average bleuperformance: {100 * average_bleu_performance / len(samples)}")
+    print("Getting BLEU score...")
+    bleu_score = get_bleu_score(samples, predictions)
+    print("Getting XCOMET-XL score...")
+    xcomet_xl_score = get_xcomet_xl_score(samples, predictions)
+    print("Getting WMT23 COMETKIWI DA XL score...")
+    wmt23_cometkiwi_da_xl_score = get_wmt23_cometkiwi_da_xl_score(samples, predictions)
+    print("Getting BLEURT score...")
+    bleurt_score = get_bleurt_score(samples, predictions)
+    print("Getting BERT score...")
+    bert_score = get_bert_score(samples, predictions)
+    average_score = round((bleu_score + xcomet_xl_score + wmt23_cometkiwi_da_xl_score + bleurt_score + bert_score) / 5, 2)
+
+    print(f"BLEU score: {bleu_score}")
+    print(f"XCOMET-XL score: {xcomet_xl_score}")
+    print(f"WMT23 COMETKIWI DA XL score: {wmt23_cometkiwi_da_xl_score}")
+    print(f"BLEURT score: {bleurt_score}")
+    print(f"BERT score: {bert_score}")
+
+    result = f"{model},{language_pair},{sample_count},{prompt_name},{bleu_score},{xcomet_xl_score},{wmt23_cometkiwi_da_xl_score},{bleurt_score},{bert_score},{average_score},{total_time}\n"
+    with open(results_path, "a") as f:
+        f.write(result)
 
 
 if __name__ == "__main__":
     # start = time()
     # print("start")
-    # benchmark("llama3.1:70b", "en-fr", 100)
+    benchmark("llama3.1", "en-fr", 100)
     # print("time", round(time() - start, 2), "s")
-    print(read_samples("en-es", 10))
+    # print(read_samples("en-es", 10))
+    # Path(join(ROOT_PATH, "results.txt")).write_text("test2")
 
     # print(get_bleu_score("Can it be delivered between 10 to 15 minutes?", "Can I receive my food in 10 to 15 minutes?"))
