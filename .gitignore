@@ -216,6 +216,6 @@ __marimo__/
 /pdf_outputs/
 /detectron2/
 /ollama/
-/data/
-/data/
+data*/
+*data/
 to_do*
