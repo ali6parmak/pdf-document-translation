@@ -53,7 +53,9 @@ def download_data():
     train_file_name = "test-00000-of-00001.parquet"
     for pair in LANGUAGES_PAIRS:
         file_name = join(pair, train_file_name)
-        hf_hub_download(repo_id=repo_id, filename=file_name, local_dir=join(f"{ROOT_PATH}/language_data"), repo_type="dataset")
+        hf_hub_download(
+            repo_id=repo_id, filename=file_name, local_dir=join(f"{ROOT_PATH}/language_data"), repo_type="dataset"
+        )
     rmtree(join(ROOT_PATH, "language_data", ".huggingface"))
 
 
@@ -188,7 +190,7 @@ def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: st
 def get_performance(
     samples: list[tuple[str, str]], predictions_path: Path, prompt_name: str = "Prompt 3", total_time: float = 0.0
 ):
-    results_path = Path(join(ROOT_PATH, "model_benchmark_results.csv"))
+    results_path = Path(join(ROOT_PATH, "results", "model_benchmark_results.csv"))
     if not results_path.exists():
         results_path.write_text(
             "model,language_pair,sample_count,prompt_name,bleu,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time\n"
@@ -233,6 +235,5 @@ if __name__ == "__main__":
     # benchmark("llama3.1", "en-ru", 2000)
     # print("time", round(time() - start, 2), "s")
     print(read_samples("en-es", 10))
-    # Path(join(ROOT_PATH, "model_benchmark_results.csv")).write_text("test2")
 
     # print(get_bleu_score("Can it be delivered between 10 to 15 minutes?", "Can I receive my food in 10 to 15 minutes?"))
