@@ -5,7 +5,7 @@ import torch
 from configuration import PROMPTS
 
 from pathlib import Path
-from time import time
+from time import time, sleep
 
 import pandas as pd
 from shutil import rmtree
@@ -95,7 +95,7 @@ def get_xcomet_xl_score(samples: list[tuple[str, str]], predictions: list[str]):
                 "ref": reference_text,
             }
         )
-    model_output = model.predict(data, batch_size=8, gpus=1)
+    model_output = model.predict(data, batch_size=2, gpus=1)
     return round(model_output.system_score * 100, 2)
 
 
@@ -111,21 +111,28 @@ def get_wmt23_cometkiwi_da_xl_score(samples: list[tuple[str, str]], predictions:
                 "mt": predictions[i].replace("```", ""),
             }
         )
-    model_output = model.predict(data, batch_size=8, gpus=1)
+    model_output = model.predict(data, batch_size=2, gpus=1)
     return round(model_output.system_score * 100, 2)
 
 
-def get_bleurt_score(samples: list[tuple[str, str]], predictions: list[str]):
+def get_bleurt_score(samples: list[tuple[str, str]], predictions: list[str], batch_size=100):
     model = BleurtForSequenceClassification.from_pretrained("lucadiliello/BLEURT-20")
     tokenizer = BleurtTokenizer.from_pretrained("lucadiliello/BLEURT-20")
 
     references = [x[1] for x in samples]
+    scores = []
 
     model.eval()
     with torch.no_grad():
-        inputs = tokenizer(references, predictions, padding="longest", return_tensors="pt")
-        res = model(**inputs).logits.flatten().tolist()
-    return round(sum(res) * 100 / len(res), 2)
+        for i in range(0, len(references), batch_size):
+            refs_batch = references[i : i + batch_size]
+            preds_batch = predictions[i : i + batch_size]
+            inputs = tokenizer(
+                refs_batch, preds_batch, padding="longest", max_length=512, truncation=True, return_tensors="pt"
+            )
+            res = model(**inputs).logits.flatten().tolist()
+            scores.extend(res)
+    return round(sum(scores) * 100 / len(scores), 2)
 
 
 def get_bert_score(samples: list[tuple[str, str]], predictions: list[str]):
@@ -154,7 +161,7 @@ def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: st
     translations = list()
     print(f"Number of samples: {len(samples)}")
     print("Starting benchmark...")
-    start_time = time()
+    total_time = 0
     for i, (from_text, human_translation) in tqdm(enumerate(samples)):
         batch = i // 50
         path = Path(join(predictions_path, str(batch) + ".json"))
@@ -164,13 +171,14 @@ def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: st
 
         language_from = language_pair.split("-")[0]
         language_to = language_pair.split("-")[1]
+        start_time = time()
         prediction = get_prediction(model, from_text, language_from, language_to, prompt_name)
+        total_time += time() - start_time
         translations.append(prediction)
 
         if (i + 1) % 50 == 0:
             path.write_text(json.dumps(translations, indent=4))
             translations = list()
-    total_time = time() - start_time
 
     print(f"Total time: {round(total_time, 2)} seconds")
 
@@ -180,7 +188,7 @@ def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: st
 def get_performance(
     samples: list[tuple[str, str]], predictions_path: Path, prompt_name: str = "Prompt 3", total_time: float = 0.0
 ):
-    results_path = Path(join(ROOT_PATH, "results.txt"))
+    results_path = Path(join(ROOT_PATH, "results.csv"))
     if not results_path.exists():
         results_path.write_text(
             "model,language_pair,sample_count,prompt_name,bleu,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time\n"
@@ -190,6 +198,7 @@ def get_performance(
     language_pair = predictions_path.name
 
     subprocess.run(["ollama", "stop", model])
+    sleep(1)
 
     predictions = list()
     for file in sorted(os.listdir(predictions_path), key=lambda x: int(x.split(".")[0])):
@@ -221,9 +230,9 @@ def get_performance(
 if __name__ == "__main__":
     # start = time()
     # print("start")
-    benchmark("llama3.1", "en-fr", 100)
+    # benchmark("llama3.1", "en-ru", 2000)
     # print("time", round(time() - start, 2), "s")
-    # print(read_samples("en-es", 10))
-    # Path(join(ROOT_PATH, "results.txt")).write_text("test2")
+    print(read_samples("en-es", 10))
+    # Path(join(ROOT_PATH, "results.csv")).write_text("test2")
 
     # print(get_bleu_score("Can it be delivered between 10 to 15 minutes?", "Can I receive my food in 10 to 15 minutes?"))
