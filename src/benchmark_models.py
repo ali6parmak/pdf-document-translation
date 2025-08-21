@@ -1,3 +1,4 @@
+import gc
 import json
 import os
 import subprocess
@@ -29,11 +30,6 @@ from ollama import Client
 load_dotenv()
 login(token=os.getenv("HUGGINGFACE_TOKEN"))
 
-# MODELS = ["llama3", "tinyllama", "GLM-4"]
-LANGUAGES_PAIRS = ["en-ru"]
-# LANGUAGES_PAIRS = ["en-es"]
-
-MODELS = ["aya:35b"]
 
 
 def get_content(translation_task: TranslationTask, prompt_name: str = "Prompt 3"):
@@ -43,15 +39,14 @@ def get_content(translation_task: TranslationTask, prompt_name: str = "Prompt 3"
     if languages_to:
         language_to_name = LANGUAGES[LANGUAGES_SHORT.index(languages_to[0])]
 
-    content = PROMPTS[prompt_name].format(language_to_name=language_to_name)
-    content += "\n\n" + "```" + translation_task.text + "```"
+    content = PROMPTS[prompt_name].format(language_to_name=language_to_name, text_to_translate=translation_task.text)
     return content
 
 
-def download_data():
+def download_data(language_pairs: list[str] = ["en-ru"]):
     repo_id = "Helsinki-NLP/opus-100"
     train_file_name = "test-00000-of-00001.parquet"
-    for pair in LANGUAGES_PAIRS:
+    for pair in language_pairs:
         file_name = join(pair, train_file_name)
         hf_hub_download(
             repo_id=repo_id, filename=file_name, local_dir=join(f"{ROOT_PATH}/language_data"), repo_type="dataset"
@@ -200,7 +195,7 @@ def get_performance(
     language_pair = predictions_path.name
 
     subprocess.run(["ollama", "stop", model])
-    sleep(1)
+    sleep(5)
 
     predictions = list()
     for file in sorted(os.listdir(predictions_path), key=lambda x: int(x.split(".")[0])):
@@ -228,12 +223,18 @@ def get_performance(
     with open(results_path, "a") as f:
         f.write(result)
 
+    torch.cuda.empty_cache()
+    gc.collect()
+    sleep(5)
+
 
 if __name__ == "__main__":
     # start = time()
     # print("start")
-    # benchmark("llama3.1", "en-ru", 2000)
+    languages = ["en-es", "en-fr", "en-ru"]
+    for pair in languages:
+        benchmark("aya:35b", pair, 100)
     # print("time", round(time() - start, 2), "s")
-    print(read_samples("en-es", 10))
+    # print(read_samples("en-es", 10))
 
     # print(get_bleu_score("Can it be delivered between 10 to 15 minutes?", "Can I receive my food in 10 to 15 minutes?"))
