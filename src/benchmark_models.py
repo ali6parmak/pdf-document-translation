@@ -31,7 +31,6 @@ load_dotenv()
 login(token=os.getenv("HUGGINGFACE_TOKEN"))
 
 
-
 def get_content(translation_task: TranslationTask, prompt_name: str = "Prompt 3"):
     language_to_name = "English"
     languages_to = [x for x in LANGUAGES_SHORT if translation_task.language_to.lower()[:2] == x]
