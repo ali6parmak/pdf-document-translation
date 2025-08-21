@@ -63,3 +63,11 @@ aya:35b[gcloud],segment_to_segment,Prompt 3,plan_1_en_es.json,31,882.56
 aya:35b[gcloud],segment_to_segment,Prompt 3,plan_1_es_en.json,31,738.43
 aya:35b[gcloud],segment_to_segment,Prompt 3,plan_2_en_fr.json,55,1779.53
 aya:35b[gcloud],segment_to_segment,Prompt 3,plan_2_fr_en.json,55,1413.3
+gpt-oss[gcloud],segment_to_segment,Prompt 3,cejil_1_es_pt.json,225,3414.36
+gpt-oss[gcloud],segment_to_segment,Prompt 3,cejil_1_pt_es.json,225,3448.54
+gpt-oss[gcloud],segment_to_segment,Prompt 3,cejil_2_es_pt.json,44,423.67
+gpt-oss[gcloud],segment_to_segment,Prompt 3,cejil_2_pt_es.json,44,363.9
+gpt-oss[gcloud],segment_to_segment,Prompt 3,ihrda_1_en_pt.json,139,1151.29
+gpt-oss[gcloud],segment_to_segment,Prompt 3,ihrda_1_pt_en.json,139,1097.69
+gpt-oss[gcloud],segment_to_segment,Prompt 3,ihrda_2_en_fr.json,105,896.19
+gpt-oss[gcloud],segment_to_segment,Prompt 3,ihrda_2_fr_en.json,105,815.3
