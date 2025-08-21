@@ -1,9 +1,7 @@
 import json
 from pathlib import Path
-from configuration import ROOT_PATH
+from configuration import ROOT_PATH, LABELS_SOURCE_PATH
 from comet import download_model, load_from_checkpoint
-
-DATA_SOURCE_PATH = Path(ROOT_PATH, "data", "labels")
 
 
 def load_data(data_path: Path | str):
@@ -17,7 +15,7 @@ def benchmark_human_performance():
 
     results = []
 
-    for data_path in sorted(DATA_SOURCE_PATH.iterdir()):
+    for data_path in sorted(LABELS_SOURCE_PATH.iterdir()):
         print(f"Processing {data_path.name}...")
         data = load_data(data_path)
         model_input = []
