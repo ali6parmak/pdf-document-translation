@@ -1,0 +1,19 @@
+file_name,language_from,language_to,wmt23_cometkiwi_da_xl_score
+cejil_1_es_pt.json,es,pt,57.69
+cejil_1_pt_es.json,pt,es,56.56
+cejil_2_es_pt.json,es,pt,54.66
+cejil_2_pt_es.json,pt,es,55.13
+ihrda_1_en_pt.json,en,pt,62.89
+ihrda_1_pt_en.json,pt,en,66.47
+ihrda_2_en_fr.json,en,fr,54.72
+ihrda_2_fr_en.json,fr,en,59.51
+ohchr_1_en_ru.json,en,ru,82.68
+ohchr_1_ru_en.json,ru,en,81.62
+ohchr_2_en_fr.json,en,fr,84.0
+ohchr_2_fr_en.json,fr,en,80.15
+plan_1_en_es.json,en,es,85.59
+plan_1_es_en.json,es,en,84.58
+plan_2_en_fr.json,en,fr,77.18
+plan_2_fr_en.json,fr,en,78.86
+
+Average score: 70.14

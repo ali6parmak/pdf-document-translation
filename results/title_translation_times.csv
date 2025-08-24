@@ -1,0 +1,16 @@
+gpt-oss,segment_to_segment,Prompt 3,cejil_1_es_pt.json,15,50.56
+gpt-oss,segment_to_segment,Prompt 3,cejil_1_pt_es.json,15,49.05
+gpt-oss,segment_to_segment,Prompt 3,cejil_2_es_pt.json,13,44.84
+gpt-oss,segment_to_segment,Prompt 3,cejil_2_pt_es.json,13,47.58
+gpt-oss,segment_to_segment,Prompt 3,ihrda_1_en_pt.json,23,76.78
+gpt-oss,segment_to_segment,Prompt 3,ihrda_1_pt_en.json,23,86.61
+gpt-oss,segment_to_segment,Prompt 3,ihrda_2_en_fr.json,28,101.82
+gpt-oss,segment_to_segment,Prompt 3,ihrda_2_fr_en.json,28,102.42
+gpt-oss,segment_to_segment,Prompt 3,ohchr_1_en_ru.json,20,53.23
+gpt-oss,segment_to_segment,Prompt 3,ohchr_1_ru_en.json,20,49.06
+gpt-oss,segment_to_segment,Prompt 3,ohchr_2_en_fr.json,47,171.87
+gpt-oss,segment_to_segment,Prompt 3,ohchr_2_fr_en.json,47,134.83
+gpt-oss,segment_to_segment,Prompt 3,plan_1_en_es.json,1,1.36
+gpt-oss,segment_to_segment,Prompt 3,plan_1_es_en.json,1,4.14
+gpt-oss,segment_to_segment,Prompt 3,plan_2_en_fr.json,2,4.12
+gpt-oss,segment_to_segment,Prompt 3,plan_2_fr_en.json,2,7.87
