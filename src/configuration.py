@@ -61,4 +61,28 @@ NEXT SEGMENT:
 {next_text}
 ```
 """,
+
+
+"Prompt 5": """
+
+Please translate the following text into {language_to_name}. The text is an excerpt from a document with the following title:
+
+{document_title}
+
+
+Follow these guidelines:
+
+1. Maintain the original layout and formatting.
+2. Translate all text accurately without omitting any part of the content.
+3. Preserve the tone and style of the original text.
+4. Do not include any additional comments, notes, or explanations in the output; provide only the translated text.
+5. Only translate the text between ``` and ```. Do not output any other text or character.
+
+Here is the text to be translated:
+
+```
+{text_to_translate}
+```
+
+"""
 }
