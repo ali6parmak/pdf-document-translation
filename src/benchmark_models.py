@@ -140,7 +140,7 @@ def get_bert_score(samples: list[tuple[str, str]], predictions: list[str]):
 def get_prediction(model: str, text: str, language_from: str, language_to: str, prompt_name: str = "Prompt 3"):
     translation_task = TranslationTask(text=text, language_from=language_from, language_to=language_to)
     content = get_content(translation_task, prompt_name)
-    response = Client().chat(model=model, messages=[{"role": "user", "content": content}])
+    response = Client(host="http://35.204.125.8:11434").chat(model=model, messages=[{"role": "user", "content": content}])
     return response["message"]["content"]
 
 
@@ -229,10 +229,7 @@ def get_performance(
 
 if __name__ == "__main__":
     # start = time()
-    # print("start")
-    languages = ["en-es", "en-fr", "en-ru"]
-    for pair in languages:
-        benchmark("aya:35b", pair, 100)
+    benchmark("aya:35b", "en-ru", 2000)
     # print("time", round(time() - start, 2), "s")
     # print(read_samples("en-es", 10))
 

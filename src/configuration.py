@@ -61,9 +61,7 @@ NEXT SEGMENT:
 {next_text}
 ```
 """,
-
-
-"Prompt 5": """
+    "Prompt 5": """
 
 Please translate the following text into {language_to_name}. The text is an excerpt from a document with the following title:
 
@@ -84,5 +82,5 @@ Here is the text to be translated:
 {text_to_translate}
 ```
 
-"""
+""",
 }

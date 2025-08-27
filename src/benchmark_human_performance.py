@@ -42,6 +42,7 @@ def benchmark_human_performance():
 
     result_path.write_text(results_string)
 
+
 def benchmark_human_performance_titles():
     model_path = download_model("Unbabel/wmt23-cometkiwi-da-xl")
     model = load_from_checkpoint(model_path)
@@ -72,6 +73,7 @@ def benchmark_human_performance_titles():
     results_string += f"Average score: {average_score}\n"
 
     result_path.write_text(results_string)
+
 
 if __name__ == "__main__":
     benchmark_human_performance_titles()
