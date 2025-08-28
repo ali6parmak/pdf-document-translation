@@ -211,5 +211,5 @@ def benchmark_model_translations(model: str, prompt_name: str = "Prompt 3"):
 
 
 if __name__ == "__main__":
-    get_model_predictions("gpt-oss", "Prompt 5")
-    # benchmark_model_translations("gpt-oss", "Prompt 5")
+    # get_model_predictions("gpt-oss", "Prompt 5")
+    benchmark_model_translations("gpt-oss", "Prompt 5")

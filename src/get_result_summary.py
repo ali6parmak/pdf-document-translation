@@ -3,7 +3,7 @@ from pathlib import Path
 from configuration import ROOT_PATH
 
 
-def get_result_summary():
+def get_translation_result_summary():
 
     df = pd.read_csv(Path(ROOT_PATH, "results", "model_translation_benchmarks.csv"))
 
@@ -39,5 +39,33 @@ def get_result_summary():
     summary_df.to_csv(Path(ROOT_PATH, "results", "model_translation_benchmarks_summary.csv"), index=False)
 
 
+def get_benchmark_result_summary():
+    df = pd.read_csv(Path(ROOT_PATH, "results", "model_benchmark_results.csv"))
+
+    df = df.drop(columns=["bleu"])
+
+    metric_cols = ["xcomet_xl", "wmt23_cometkiwi_da_xl", "bleurt", "bert_score"]
+
+    grouped = (
+        df.groupby(["model", "sample_count", "prompt_name"])
+        .agg({**{col: "mean" for col in metric_cols}, "total_time": "sum"})
+        .reset_index()
+    )
+
+    grouped["average_score"] = grouped[metric_cols].mean(axis=1)
+
+    for col in metric_cols + ["average_score"]:
+        grouped[col] = grouped[col].round(2)
+    grouped["total_time"] = grouped["total_time"].round(2)
+
+    cols = ["model", "sample_count", "prompt_name"] + metric_cols + ["average_score", "total_time"]
+    grouped = grouped[cols]
+    grouped.sort_values(by=["sample_count", "average_score"], ascending=False, inplace=True)
+
+    grouped.to_csv(Path(ROOT_PATH, "results", "model_benchmark_results_summary.csv"), index=False)
+    print(grouped)
+
+
 if __name__ == "__main__":
-    get_result_summary()
+    get_translation_result_summary()
+    get_benchmark_result_summary()

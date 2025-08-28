@@ -162,6 +162,41 @@ def get_model_predictions(model: str, prompt_name: str = "Prompt 3"):
             )
 
 
+def separate_pages_into_segments(data: dict):
+    separated_data = {
+        "main_language": data["main_language"],
+        "other_language": data["other_language"],
+        "main_xml_name": data["main_xml_name"],
+        "other_xml_name": data["other_xml_name"],
+        "paragraphs": [],
+    }
+    for paragraph in data["paragraphs"]:
+        new_paragraphs = []
+        main_text_separated = paragraph["main_language"].split("\n\n")
+        other_text_separated = paragraph["other_language"].split("\n\n")
+        prediction = paragraph["prediction"]
+        prediction = prediction.replace("```\n", "")
+        prediction = prediction.replace("\n```", "")
+        prediction = prediction.replace("```", "")
+        prediction_separated = prediction.split("\n\n")
+
+        for i in range(len(main_text_separated)):
+            try:
+                new_paragraphs.append(
+                    {
+                        "main_language": main_text_separated[i],
+                        "other_language": other_text_separated[i],
+                        "prediction": prediction_separated[i],
+                    }
+                )
+            except IndexError:
+                # problem with cejil_1_pt_es.json, in the main paragraph 66.
+                separated_data["paragraphs"].append(paragraph)
+                break
+        separated_data["paragraphs"].extend(new_paragraphs)
+    return separated_data
+
+
 def benchmark_model_translations(model: str, prompt_name: str = "Prompt 3"):
     predictions_path = Path(PREDICTIONS_SOURCE_PATH, METHOD_NAME, model)
     if not predictions_path.exists():
@@ -184,7 +219,7 @@ def benchmark_model_translations(model: str, prompt_name: str = "Prompt 3"):
 
         print(f"Processing {prediction_path.name}...")
 
-        data = load_data(prediction_path)
+        data = separate_pages_into_segments(load_data(prediction_path))
 
         print("Getting XCOMET-XL score...")
         xcomet_xl_score = get_xcomet_xl_score(data)

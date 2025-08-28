@@ -1,0 +1,8 @@
+model,sample_count,prompt_name,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time
+deepl,2000,(no prompt),90.04,73.18,69.66,86.48,79.84,3749.07
+aya:35b[gcloud],2000,Prompt 3,88.24,72.63,67.46,82.16,77.62,96875.48
+gpt-oss,2000,Prompt 3,86.56,72.34,65.96,78.02,75.72,37045.49
+llama3.1,2000,Prompt 3,82.04,66.29,61.9,75.11,71.34,2870.2
+aya:35b[gcloud],100,Prompt 3,88.2,71.6,65.29,81.44,76.63,4258.54
+gpt-oss,100,Prompt 3,86.49,71.48,64.24,77.21,74.85,1591.91
+llama3.1,100,Prompt 3,80.03,64.05,58.52,73.89,69.12,144.02
