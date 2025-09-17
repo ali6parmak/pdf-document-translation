@@ -140,12 +140,13 @@ def get_bert_score(samples: list[tuple[str, str]], predictions: list[str]):
 def get_prediction(model: str, text: str, language_from: str, language_to: str, prompt_name: str = "Prompt 3"):
     translation_task = TranslationTask(text=text, language_from=language_from, language_to=language_to)
     content = get_content(translation_task, prompt_name)
-    response = Client(host="http://35.204.125.8:11434").chat(model=model, messages=[{"role": "user", "content": content}])
+    response = Client(host="http://localhost:11434").chat(model=model, messages=[{"role": "user", "content": content}])
     return response["message"]["content"]
 
 
 def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: str = "Prompt 3"):
-    predictions_path = Path(join(ROOT_PATH, "language_data", "predictions", model, f"samples_{limit}", language_pair))
+    model_dir = model.replace("/", "--")
+    predictions_path = Path(join(ROOT_PATH, "language_data", "predictions", model_dir, f"samples_{limit}", language_pair))
 
     if not predictions_path.exists():
         os.makedirs(predictions_path)
@@ -178,12 +179,21 @@ def benchmark(model: str, language_pair: str, limit: int = 2000, prompt_name: st
 
     print(f"Total time: {round(total_time, 2)} seconds")
 
-    get_performance(samples, predictions_path, prompt_name, round(total_time, 2))
+    # get_performance(samples, predictions_path, prompt_name, round(total_time, 2))
+    return round(total_time, 2)
 
 
 def get_performance(
-    samples: list[tuple[str, str]], predictions_path: Path, prompt_name: str = "Prompt 3", total_time: float = 0.0
+    model: str, language_pair: str, limit: int = 2000, prompt_name: str = "Prompt 3", total_time: float = 0.0
 ):
+
+    samples = read_samples(language_pair)
+    if limit:
+        samples = samples[:limit]
+    predictions_path = Path(
+        join(ROOT_PATH, "language_data", "predictions", model.replace("/", "--"), f"samples_{limit}", language_pair)
+    )
+
     results_path = Path(join(ROOT_PATH, "results", "model_benchmark_results.csv"))
     if not results_path.exists():
         results_path.write_text(
@@ -193,7 +203,7 @@ def get_performance(
     sample_count = predictions_path.parent.name.split("_")[1]
     language_pair = predictions_path.name
 
-    subprocess.run(["ollama", "stop", model])
+    subprocess.run(["ollama", "stop", model.replace("--", "/")])
     sleep(5)
 
     predictions = list()
@@ -229,7 +239,15 @@ def get_performance(
 
 if __name__ == "__main__":
     # start = time()
-    benchmark("aya:35b", "en-ru", 2000)
+    language_pairs = ["en-es", "en-fr", "en-ru"]
+    model = "zongwei/gemma3-translator:4b"
+    limit = 2000
+    prompt_name = "Prompt 3"
+    get_performance(model, "ar-en", limit, prompt_name, 492.12)
+
+    for language_pair in language_pairs:
+        total_time = benchmark(model, language_pair, limit, prompt_name)
+        get_performance(model, language_pair, limit, prompt_name, total_time)
     # print("time", round(time() - start, 2), "s")
     # print(read_samples("en-es", 10))
 

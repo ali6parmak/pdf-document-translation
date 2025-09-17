@@ -1,6 +1,10 @@
 model,method,prompt_name,total_average_score,total_time_passed,total_sample_count,time_per_sample
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,82.57,3276.22,1691,1.94
 aya:35b[gcloud],segment_to_segment,Prompt 3,80.33,67529.32,1691,39.93
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,80.33,2209.85,1691,1.31
 gpt-oss,page_to_page,Prompt 3,80.08,8221.43,265,31.02
 gpt-oss,segment_to_segment,Prompt 3,79.93,13244.2,1691,7.83
 gpt-oss,previous_after_segments,Prompt 4,79.84,13320.63,1691,7.88
 gpt-oss,segment_to_segment_with_titles,Prompt 5,79.08,12930.97,1691,7.65
+nllb-200-3.3B,segment_to_segment,(no prompt),79.03,2358.87,1691,1.39
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,74.54,1298.0,1691,0.77

@@ -15,3 +15,6 @@ gpt-oss,plan_1_en_es.json,segment_to_segment,Prompt 3,98.24,78.08,96.23,75.55,87
 gpt-oss,plan_1_es_en.json,segment_to_segment,Prompt 3,100.0,84.58,99.92,100.0,96.12
 gpt-oss,plan_2_en_fr.json,segment_to_segment,Prompt 3,98.03,78.7,84.62,77.23,84.65
 gpt-oss,plan_2_fr_en.json,segment_to_segment,Prompt 3,98.99,75.86,96.95,94.08,91.47
+
+average: 82
+wmt23 average: 68.07

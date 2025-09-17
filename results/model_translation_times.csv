@@ -87,3 +87,67 @@ gpt-oss,segment_to_segment_with_titles,Prompt 5,plan_1_en_es.json,31,176.55
 gpt-oss,segment_to_segment_with_titles,Prompt 5,plan_1_es_en.json,31,157.29
 gpt-oss,segment_to_segment_with_titles,Prompt 5,plan_2_en_fr.json,55,378.55
 gpt-oss,segment_to_segment_with_titles,Prompt 5,plan_2_fr_en.json,55,317.25
+nllb-200-3.3B,segment_to_segment,(no prompt),cejil_1_es_pt.json,225,473.64
+nllb-200-3.3B,segment_to_segment,(no prompt),cejil_1_pt_es.json,225,520.45
+nllb-200-3.3B,segment_to_segment,(no prompt),cejil_2_es_pt.json,44,41.84
+nllb-200-3.3B,segment_to_segment,(no prompt),cejil_2_pt_es.json,44,39.94
+nllb-200-3.3B,segment_to_segment,(no prompt),ihrda_1_en_pt.json,139,107.92
+nllb-200-3.3B,segment_to_segment,(no prompt),ihrda_1_pt_en.json,139,99.04
+nllb-200-3.3B,segment_to_segment,(no prompt),ihrda_2_en_fr.json,105,85.27
+nllb-200-3.3B,segment_to_segment,(no prompt),ihrda_2_fr_en.json,105,68.95
+nllb-200-3.3B,segment_to_segment,(no prompt),ohchr_1_en_ru.json,109,155.44
+nllb-200-3.3B,segment_to_segment,(no prompt),ohchr_1_ru_en.json,110,141.7
+nllb-200-3.3B,segment_to_segment,(no prompt),ohchr_2_en_fr.json,137,251.76
+nllb-200-3.3B,segment_to_segment,(no prompt),ohchr_2_fr_en.json,137,208.25
+nllb-200-3.3B,segment_to_segment,(no prompt),plan_1_en_es.json,31,24.77
+nllb-200-3.3B,segment_to_segment,(no prompt),plan_1_es_en.json,31,21.75
+nllb-200-3.3B,segment_to_segment,(no prompt),plan_2_en_fr.json,55,65.98
+nllb-200-3.3B,segment_to_segment,(no prompt),plan_2_fr_en.json,55,52.17
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,cejil_1_es_pt.json,225,443.9
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,cejil_1_pt_es.json,225,420.11
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,cejil_2_es_pt.json,44,34.62
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,cejil_2_pt_es.json,44,35.82
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ihrda_1_en_pt.json,139,95.48
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ihrda_1_pt_en.json,139,87.19
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ihrda_2_en_fr.json,105,76.87
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ihrda_2_fr_en.json,105,58.66
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ohchr_1_en_ru.json,109,250.8
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ohchr_1_ru_en.json,110,133.29
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ohchr_2_en_fr.json,137,251.39
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,ohchr_2_fr_en.json,137,166.8
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,plan_1_en_es.json,31,28.39
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,plan_1_es_en.json,31,21.76
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,plan_2_en_fr.json,55,61.38
+huihui_ai/hunyuan-mt-abliterated:7b,segment_to_segment,Prompt 3,plan_2_fr_en.json,55,43.39
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,cejil_1_es_pt.json,225,263.39
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,cejil_1_pt_es.json,225,259.78
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,cejil_2_es_pt.json,44,23.72
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,cejil_2_pt_es.json,44,23.6
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ihrda_1_en_pt.json,139,66.52
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ihrda_1_pt_en.json,139,61.73
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ihrda_2_en_fr.json,105,46.49
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ihrda_2_fr_en.json,105,41.87
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ohchr_1_en_ru.json,109,90.08
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ohchr_1_ru_en.json,110,87.59
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ohchr_2_en_fr.json,137,127.55
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,ohchr_2_fr_en.json,137,107.62
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,plan_1_en_es.json,31,16.49
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,plan_1_es_en.json,31,16.28
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,plan_2_en_fr.json,55,34.37
+zongwei/gemma3-translator:4b,segment_to_segment,Prompt 3,plan_2_fr_en.json,55,30.92
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,cejil_1_es_pt.json,225,789.47
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,cejil_1_pt_es.json,225,759.69
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,cejil_2_es_pt.json,44,58.7
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,cejil_2_pt_es.json,44,57.69
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ihrda_1_en_pt.json,139,156.38
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ihrda_1_pt_en.json,139,118.94
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ihrda_2_en_fr.json,105,98.59
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ihrda_2_fr_en.json,105,82.16
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ohchr_1_en_ru.json,109,243.64
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ohchr_1_ru_en.json,110,158.62
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ohchr_2_en_fr.json,137,346.25
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,ohchr_2_fr_en.json,137,214.1
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,plan_1_en_es.json,31,32.94
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,plan_1_es_en.json,31,23.12
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,plan_2_en_fr.json,55,80.63
+bytedance-seed-x-ppo-7b-gptq-int8,segment_to_segment,ByteDanceSeedXPPOPrompt,plan_2_fr_en.json,55,55.3

@@ -2,83 +2,59 @@ import gc
 import sys
 import os
 
+from benchmark_segment_to_segment import (
+    get_bert_score,
+    get_bleurt_score,
+    get_wmt23_cometkiwi_da_xl_score,
+    get_xcomet_xl_score,
+)
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import json
 from pathlib import Path
-import subprocess
 from time import sleep, time
 from configuration import LABELS_SOURCE_PATH, PREDICTIONS_SOURCE_PATH, LANGUAGES_SHORT, LANGUAGES, PROMPTS, ROOT_PATH
 from domain.TranslationTask import TranslationTask
-from ollama import Client
-from comet import download_model, load_from_checkpoint
-from tqdm import tqdm
 import torch
-from bleurt_pytorch import BleurtForSequenceClassification, BleurtTokenizer
-from bert_score import score
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM
+from vllm import LLM, SamplingParams
+from huggingface_hub import login
+from dotenv import load_dotenv
+
 
 METHOD_NAME = "segment_to_segment"
 
 
-def get_xcomet_xl_score(data: dict):
-    model_path = download_model("Unbabel/XCOMET-XL")
-    model = load_from_checkpoint(model_path)
-    input_data = []
-
-    for prediction in tqdm(data["paragraphs"]):
-        input_data.append(
-            {
-                "src": prediction["main_language"],
-                "mt": prediction["prediction"],
-                "ref": prediction["other_language"],
-            }
-        )
-    model_output = model.predict(input_data, batch_size=2, gpus=1)
-    return round(model_output.system_score * 100, 2)
+load_dotenv()
+login(token=os.getenv("HUGGINGFACE_TOKEN"))
 
 
-def get_wmt23_cometkiwi_da_xl_score(data: dict):
-    model_path = download_model("Unbabel/wmt23-cometkiwi-da-xl")
-    model = load_from_checkpoint(model_path)
-    input_data = []
+LANGUAGE_TO_FLORES = {
+    "ar": "arb_Arab",
+    "en": "eng_Latn",
+    "es": "spa_Latn",
+    "fr": "fra_Latn",
+    "pt": "por_Latn",
+    "ru": "rus_Cyrl",
+}
 
-    for sample in tqdm(data["paragraphs"]):
-        input_data.append(
-            {
-                "src": sample["main_language"],
-                "mt": sample["prediction"],
-            }
-        )
-    model_output = model.predict(input_data, batch_size=2, gpus=1)
-    return round(model_output.system_score * 100, 2)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_bleurt_score(data: dict, batch_size: int = 50):
-    model = BleurtForSequenceClassification.from_pretrained("lucadiliello/BLEURT-20")
-    tokenizer = BleurtTokenizer.from_pretrained("lucadiliello/BLEURT-20")
+def get_nllb_prediction(
+    model: AutoModelForSeq2SeqLM, tokenizer: AutoTokenizer, text: str, language_from: str, language_to: str
+):
 
-    references = [x["other_language"] for x in data["paragraphs"]]
-    predictions = [x["prediction"] for x in data["paragraphs"]]
-    scores = []
+    tokenizer.src_lang = LANGUAGE_TO_FLORES[language_from]
+    tgt_lang = LANGUAGE_TO_FLORES[language_to]
+    inputs = tokenizer(text, return_tensors="pt").to(device)
 
-    model.eval()
-    with torch.no_grad():
-        for i in range(0, len(references), batch_size):
-            refs_batch = references[i : i + batch_size]
-            preds_batch = predictions[i : i + batch_size]
-            inputs = tokenizer(
-                refs_batch, preds_batch, padding="longest", max_length=512, truncation=True, return_tensors="pt"
-            )
-            res = model(**inputs).logits.flatten().tolist()
-            scores.extend(res)
-    return round(sum(scores) * 100 / len(scores), 2)
+    translated_tokens = model.generate(
+        **inputs, forced_bos_token_id=tokenizer.convert_tokens_to_ids(tgt_lang), max_length=512
+    )
 
-
-def get_bert_score(data: dict):
-    references = [x["other_language"] for x in data["paragraphs"]]
-    predictions = [x["prediction"] for x in data["paragraphs"]]
-    precision, recall, f1 = score(predictions, references, model_type="bert-base-multilingual-cased", verbose=True)
-    return round(f1.mean().item() * 100, 2)
+    return tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
 
 
 def load_data(data_path: Path | str):
@@ -97,30 +73,60 @@ def get_content(translation_task: TranslationTask, prompt_name: str = "Prompt 3"
     return content
 
 
-def get_prediction(model: str, text: str, language_from: str, language_to: str, prompt_name: str = "Prompt 3"):
-    translation_task = TranslationTask(text=text, language_from=language_from, language_to=language_to)
-    content = get_content(translation_task, prompt_name)
-    response = Client().chat(model=model, messages=[{"role": "user", "content": content}])
-    return response["message"]["content"]
+def get_prediction(
+    hf_model: AutoModelForSeq2SeqLM, tokenizer: AutoTokenizer, text: str, language_from: str, language_to: str
+):
+    return get_nllb_prediction(hf_model, tokenizer, text, language_from, language_to)
 
 
-def get_predictions_for_file(data: dict, model: str, prompt_name: str = "Prompt 3"):
+def get_predictions_for_file(data: dict, hf_model: AutoModelForSeq2SeqLM, tokenizer: AutoTokenizer):
     for paragraph in data["paragraphs"]:
         prediction = get_prediction(
-            model, paragraph["main_language"], data["main_language"], data["other_language"], prompt_name
+            hf_model, tokenizer, paragraph["main_language"], data["main_language"], data["other_language"]
+        )
+        paragraph["prediction"] = prediction
+    return data
+
+
+def get_bytedance_seed_x_ppo_prediction(hf_model: AutoModelForCausalLM, text: str, language_from: str, language_to: str):
+    languages_from = [x for x in LANGUAGES_SHORT if language_from.lower()[:2] == x]
+    source_language = LANGUAGES[LANGUAGES_SHORT.index(languages_from[0])]
+    languages_to = [x for x in LANGUAGES_SHORT if language_to.lower()[:2] == x]
+    target_language = LANGUAGES[LANGUAGES_SHORT.index(languages_to[0])]
+
+    messages = [
+        f"Translate the following {source_language} sentence into {target_language}:\n{text} <{language_to.lower()}>"
+    ]
+
+    decoding_params = SamplingParams(temperature=0, max_tokens=512, skip_special_tokens=True)
+    results = hf_model.generate(messages, decoding_params)
+    return results[0].outputs[0].text.strip()
+
+
+def get_predictions_for_file_bytedance(data: dict, hf_model: LLM):
+
+    for paragraph in data["paragraphs"]:
+        prediction = get_bytedance_seed_x_ppo_prediction(
+            hf_model, paragraph["main_language"], data["main_language"], data["other_language"]
         )
         paragraph["prediction"] = prediction
     return data
 
 
 def get_model_predictions(model: str, prompt_name: str = "Prompt 3"):
-    model_dir = model.replace("/", "--")
-    predictions_path = Path(PREDICTIONS_SOURCE_PATH, METHOD_NAME, model_dir)
+    predictions_path = Path(PREDICTIONS_SOURCE_PATH, METHOD_NAME, model)
     if not predictions_path.exists():
         predictions_path.mkdir(parents=True, exist_ok=True)
 
-    # load model
-    _ = Client().chat(model=model, messages=[{"role": "user", "content": "hello"}])
+    # model_name = "facebook/nllb-200-3.3B"
+    # tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # hf_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    # hf_model = hf_model.to(device)
+
+    model_name = "ByteDance-Seed/Seed-X-PPO-7B-GPTQ-Int8"
+    hf_model = LLM(
+        model=model_name, max_num_seqs=512, tensor_parallel_size=1, enable_prefix_caching=True, gpu_memory_utilization=0.95
+    )
 
     model_translation_times_path = Path(ROOT_PATH, "results", "model_translation_times.csv")
     if not model_translation_times_path.exists():
@@ -135,7 +141,8 @@ def get_model_predictions(model: str, prompt_name: str = "Prompt 3"):
         print(f"Processing {label_data_path.name}...")
         data = load_data(label_data_path)
         start_time = time()
-        data = get_predictions_for_file(data, model)
+        # data = get_predictions_for_file(data, hf_model, tokenizer)
+        data = get_predictions_for_file_bytedance(data, hf_model)
         time_taken = time() - start_time
         prediction_path.write_text(json.dumps(data, indent=4))
         with open(model_translation_times_path, "a") as f:
@@ -145,14 +152,11 @@ def get_model_predictions(model: str, prompt_name: str = "Prompt 3"):
 
 
 def benchmark_model_translations(model: str, prompt_name: str = "Prompt 3"):
-    model_dir = model.replace("/", "--")
-    predictions_path = Path(PREDICTIONS_SOURCE_PATH, METHOD_NAME, model_dir)
+
+    predictions_path = Path(PREDICTIONS_SOURCE_PATH, METHOD_NAME, model)
     if not predictions_path.exists():
         print(f"Predictions for {model} not found")
         return
-
-    subprocess.run(["ollama", "stop", model])
-    sleep(1)
 
     benchmark_result_path = Path(ROOT_PATH, "results", "model_translation_benchmarks.csv")
     if not benchmark_result_path.exists():
@@ -198,5 +202,8 @@ def benchmark_model_translations(model: str, prompt_name: str = "Prompt 3"):
 
 
 if __name__ == "__main__":
-    # get_model_predictions("zongwei/gemma3-translator:4b")
-    benchmark_model_translations("zongwei/gemma3-translator:4b")
+    model = "bytedance-seed-x-ppo-7b-gptq-int8"
+    prompt_name = "ByteDanceSeedXPPOPrompt"
+
+    get_model_predictions(model, prompt_name)
+    # benchmark_model_translations(model, prompt_name)
