@@ -58,9 +58,12 @@ def get_benchmark_result_summary():
         grouped[col] = grouped[col].round(2)
     grouped["total_time"] = grouped["total_time"].round(2)
 
-    cols = ["model", "sample_count", "prompt_name"] + metric_cols + ["average_score", "total_time"]
+    # Rename the column here
+    grouped = grouped.rename(columns={"sample_count": "sample_count_per_language_pair"})
+
+    cols = ["model", "sample_count_per_language_pair", "prompt_name"] + metric_cols + ["average_score", "total_time"]
     grouped = grouped[cols]
-    grouped.sort_values(by=["sample_count", "average_score"], ascending=False, inplace=True)
+    grouped.sort_values(by=["sample_count_per_language_pair", "average_score"], ascending=False, inplace=True)
 
     grouped.to_csv(Path(ROOT_PATH, "results", "model_benchmark_results_summary.csv"), index=False)
     print(grouped)

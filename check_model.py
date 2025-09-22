@@ -10,7 +10,8 @@ def check_bytedance_seed_x_ppo():
     model = LLM(
         model=model_path, max_num_seqs=512, tensor_parallel_size=1, enable_prefix_caching=True, gpu_memory_utilization=0.95
     )
-    messages = ["Translate the following English sentence into Turkish:\nMay the force be with you <tr>"]
+    content = """The goal of this task is to recognize human actions such as “ice skating” and “playing guitar” in video recordings. We use the most recent version of the Kinetics dataset (Kinetics700), a widely used benchmark for action classification [22]. It is a large-scale dataset with over 550k 10-second clips from 700 action classes. This problem has been primarily tackled from a visual perspective, although some multimodal approaches have also been proposed [23, 24]."""
+    messages = [f"Translate the following English sentence into Turkish:\n{content} <tr>"]
     # Beam search (We recommend using beam search decoding)
     # decoding_params = BeamSearchParams(beam_width=4,
     #                                 max_tokens=512)
@@ -120,8 +121,8 @@ def check_hunyuan_mt_7b_fp8():
 
 
 if __name__ == "__main__":
-    # check_bytedance_seed_x_ppo()
+    check_bytedance_seed_x_ppo()
     # check_trillionlabs_1_8b()
     # check_nllb_distilled_600m()
-    check_hunyuan_mt_7b()
+    # check_hunyuan_mt_7b()
     # check_hunyuan_mt_7b_fp8()

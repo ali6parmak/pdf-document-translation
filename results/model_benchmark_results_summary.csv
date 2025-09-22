@@ -1,4 +1,4 @@
-model,sample_count,prompt_name,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time
+model,sample_count_per_language_pair,prompt_name,xcomet_xl,wmt23_cometkiwi_da_xl,bleurt,bert_score,average_score,total_time
 deepl,2000,(no prompt),90.04,73.18,69.66,86.48,79.84,3749.07
 bytedance-seed-x-ppo-7b-gptq-int8,2000,ByteDanceSeedXPPOPrompt,90.02,74.6,68.66,85.72,79.75,4077.01
 nllb-200-3.3B,2000,(no prompt),87.69,70.56,67.12,85.77,77.78,2912.45

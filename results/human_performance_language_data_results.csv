@@ -1,0 +1,7 @@
+file_name,language_from,language_to,wmt23_cometkiwi_da_xl_score
+test-00000-of-00001.parquet,ar,en,62.42
+test-00000-of-00001.parquet,en,es,64.1
+test-00000-of-00001.parquet,en,fr,59.47
+test-00000-of-00001.parquet,en,ru,62.21
+
+Average score: 62.05
